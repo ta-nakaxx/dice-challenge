@@ -27,29 +27,35 @@
     let latestResult = [];
     let resultType = "";
 
-    const successWebhookURL = "https://hook.eu2.make.com/dkxo9a01uaovk75sywloqnkijqtjqfaf";
-    const nearMissWebhookURL = "https://hook.eu2.make.com/g6igdb1tv5tmulbjqm8ctg4u17wuxn7u";
-
     async function fetchStageNumber() {
       const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
       try {
         const res = await fetch(url);
         const text = await res.text();
-        console.log("生レスポンス：", text); // ← これでデバッグも可能
-
         const json = JSON.parse(text.substring(47).slice(0, -2));
-
-        const validRows = json.table.rows.filter(row => {
-          if (!row.c || !row.c[0] || row.c[0].v === null || row.c[0].v === '') return false;
-          const hasRealValue = row.c.some(cell => cell && typeof cell.v === "string" && cell.v.trim() !== "");
-          return hasRealValue;
-        });
-
-        console.log("有効な行数:", validRows.length);
-        console.log("validRows[0]:", validRows[0]);
-
+    
+        let rows = json.table.rows || [];
+    
+        // ✅ A1がデータ行として返ってくる場合、先頭に 'stage_number' があれば除外
+        if (
+          rows.length > 0 &&
+          rows[0].c &&
+          rows[0].c[0] &&
+          typeof rows[0].c[0].v === 'string' &&
+          rows[0].c[0].v.toLowerCase().includes('stage_number')
+        ) {
+          rows = rows.slice(1); // 先頭行を除外
+        }
+    
+        const validRows = rows.filter(row =>
+          row.c.some(cell => cell && cell.v !== null && cell.v.toString().trim() !== "")
+        );
+    
+        console.log("rows内容:", rows);
+        console.log("有効な行数（ヘッダー除外後）:", validRows.length);
+    
         diceCount = (validRows.length === 0) ? 2 : validRows.length + 2;
-
+    
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
       } catch (e) {
