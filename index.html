@@ -30,33 +30,35 @@
     const successWebhookURL = "https://hook.eu2.make.com/dkxo9a01uaovk75sywloqnkijqtjqfaf";
     const nearMissWebhookURL = "https://hook.eu2.make.com/g6igdb1tv5tmulbjqm8ctg4u17wuxn7u";
 
-async function fetchStageNumber() {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-  try {
-    const res = await fetch(url);
-    const text = await res.text();
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-
-    // 強化フィルター：1列目に値があり、かつどこかの列に値が入っている行だけカウント
-    const validRows = json.table.rows.filter(
-      row =>
-        row.c &&                                       // 行自体が null でない
-        row.c[0] && row.c[0].v !== null && row.c[0].v !== '' && // stage_number が存在
-        row.c.some(cell => cell && cell.v !== null && cell.v !== '') // どこか1つでも値あり
-    );
-
-    console.log("rows内容:", json.table.rows);
-    console.log("有効な行数（完全フィルター適用）:", validRows.length);
-
-    diceCount = validRows.length + 2;
-
-    document.getElementById("stage").innerText =
-      `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
-  } catch (e) {
-    console.error("ステージ読み込み失敗：", e);
-    document.getElementById("stage").innerText = "ステージ読み込み失敗";
-  }
-}
+    async function fetchStageNumber() {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+    
+        // 強化フィルター：ゴミ行や空行を除外
+        const validRows = json.table.rows.filter(
+          row =>
+            row.c &&
+            row.c[0] && row.c[0].v !== null && row.c[0].v !== '' &&
+            row.c.some(cell => cell && cell.v !== null && cell.v !== '')
+        );
+    
+        // rows構造のログ（デバッグ用）
+        console.log("rows内容:", json.table.rows);
+        console.log("有効な行数（補正前）:", validRows.length);
+    
+        // ✅ 補正ロジック（0件時だけ明示的に2個スタート）
+        diceCount = (validRows.length === 0) ? 2 : validRows.length + 2;
+    
+        document.getElementById("stage").innerText =
+          `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
+      } catch (e) {
+        console.error("ステージ読み込み失敗：", e);
+        document.getElementById("stage").innerText = "ステージ読み込み失敗";
+      }
+    }
 
     function rollDice() {
       document.getElementById("result").innerText = "ダイスを振っています…🎲";
