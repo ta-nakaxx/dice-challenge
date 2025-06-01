@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ゾロ目チャレンジ</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #result { margin-top: 10px; }
+    #nameForm { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🎲 ゾロ目チャレンジ！</h1>
+  <p id="stage">読み込み中...</p>
+  <button onclick="rollDice()">ダイスを振る</button>
+  <p id="result"></p>
+
+  <div id="nameForm" style="display:none;">
+    <input type="text" id="playerName" placeholder="あなたの名前">
+    <button onclick="submitResult()">記録する</button>
+  </div>
+
+  <script>
+    const sheetID = "136qSlVsygA4iVBbieZ8etzfJeQOvBawUo3uaCcLX_2I";
+    const sheetName = "SuccessLog";
+    let diceCount = 2;
+    let latestResult = [];
+    let resultType = "";  // "success" or "near_miss"
+
+    const successWebhookURL = "https://hook.eu2.make.com/dkxo9a01uaovk75sywloqnkijqtjqfaf";
+    const nearMissWebhookURL = "https://hook.eu2.make.com/g6igdb1tv5tmulbjqm8ctg4u17wuxn7u";
+
+    async function fetchStageNumber() {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rowCount = json.table.rows.length;
+        const stage = rowCount + 1;
+        diceCount = stage + 1;
+        document.getElementById("stage").innerText =
+          `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
+      } catch (e) {
+        console.error("ステージ読み込み失敗：", e);
+        document.getElementById("stage").innerText = "ステージ読み込み失敗";
+      }
+    }
+
+    function rollDice() {
+      document.getElementById("result").innerText = "ダイスを振っています…🎲";
+      document.getElementById("nameForm").style.display = "none";
+
+      setTimeout(() => {
+        latestResult = [];
+        for (let i = 0; i < diceCount; i++) {
+          latestResult.push(Math.floor(Math.random() * 6) + 1);
+        }
+
+        const allSame = latestResult.every(n => n === latestResult[0]);
+        const isOne = latestResult[0] === 1;
+
+        let msg = `出目：${latestResult.join(', ')} → `;
+        if (allSame && isOne) {
+          msg += "🎉 成功！（1のゾロ目）";
+          resultType = "success";
+          document.getElementById("nameForm").style.display = "block";
+        } else if (allSame) {
+          msg += "おしい！ゾロ目だけど1じゃない";
+          resultType = "near_miss";
+          document.getElementById("nameForm").style.display = "block";
+        } else {
+          msg += "失敗！";
+          resultType = "";
+        }
+
+        document.getElementById("result").innerText = msg;
+      }, 500);
+    }
+
+    function submitResult() {
+      const name = document.getElementById("playerName").value;
+      if (!name || resultType === "") {
+        alert("名前を入力してください！");
+        return;
+      }
+
+      const payload = {
+        stage_number: diceCount - 1,
+        dice_count: diceCount,
+        dice_values: latestResult.join(','),
+        name: name,
+        timestamp: new Date().toISOString()
+      };
+
+      const url = (resultType === "success") ? successWebhookURL : nearMissWebhookURL;
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(response => {
+          if (response.ok) {
+            alert("記録を送信しました！");
+            location.reload();
+          } else {
+            alert("送信に失敗しました。");
+          }
+        });
+    }
+
+    fetchStageNumber();
+  </script>
+</body>
+</html>
