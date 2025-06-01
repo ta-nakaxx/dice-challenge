@@ -82,5 +82,43 @@
           resultType = "";
         }
 
-        document.getElementById("result").innerText = ms
+        document.getElementById("result").innerText = msg;
+      }, 500);
+    }
 
+    function submitResult() {
+      const name = document.getElementById("playerName").value;
+      if (!name || resultType === "") {
+        alert("名前を入力してください！");
+        return;
+      }
+
+      const payload = {
+        stage_number: diceCount - 1,
+        dice_count: diceCount,
+        dice_values: latestResult.join(','),
+        name: name,
+        timestamp: new Date().toISOString()
+      };
+
+      const url = (resultType === "success") ? successWebhookURL : nearMissWebhookURL;
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(response => {
+          if (response.ok) {
+            alert("記録を送信しました！");
+            location.reload();
+          } else {
+            alert("送信に失敗しました。");
+          }
+        });
+    }
+
+    fetchStageNumber();
+  </script>
+</body>
+</html>
