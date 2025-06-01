@@ -46,6 +46,8 @@
         });
 
         console.log("有効な行数:", validRows.length);
+        console.log("validRows[0]:", validRows[0]);
+
         diceCount = (validRows.length === 0) ? 2 : validRows.length + 2;
 
         document.getElementById("stage").innerText =
