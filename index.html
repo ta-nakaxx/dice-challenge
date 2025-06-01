@@ -35,23 +35,19 @@
       try {
         const res = await fetch(url);
         const text = await res.text();
+        console.log("生レスポンス：", text); // ← これでデバッグも可能
+
         const json = JSON.parse(text.substring(47).slice(0, -2));
-    
-        // 強化フィルター：ゴミ行や空行を除外
-        const validRows = json.table.rows.filter(
-          row =>
-            row.c &&
-            row.c[0] && row.c[0].v !== null && row.c[0].v !== '' &&
-            row.c.some(cell => cell && cell.v !== null && cell.v !== '')
-        );
-    
-        // rows構造のログ（デバッグ用）
-        console.log("rows内容:", json.table.rows);
-        console.log("有効な行数（補正前）:", validRows.length);
-    
-        // ✅ 補正ロジック（0件時だけ明示的に2個スタート）
+
+        const validRows = json.table.rows.filter(row => {
+          if (!row.c || !row.c[0] || row.c[0].v === null || row.c[0].v === '') return false;
+          const hasRealValue = row.c.some(cell => cell && typeof cell.v === "string" && cell.v.trim() !== "");
+          return hasRealValue;
+        });
+
+        console.log("有効な行数:", validRows.length);
         diceCount = (validRows.length === 0) ? 2 : validRows.length + 2;
-    
+
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
       } catch (e) {
