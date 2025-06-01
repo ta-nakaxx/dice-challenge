@@ -40,7 +40,7 @@
         const validRows = json.table.rows.filter(
           row => row.c[0] && row.c[0].v !== null && row.c[0].v !== ''
         );
-        diceCount = validRows.length + 2;
+        diceCount = 2;
     
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
@@ -48,8 +48,6 @@
         console.error("ステージ読み込み失敗：", e);
         document.getElementById("stage").innerText = "ステージ読み込み失敗";
       }
-      const json = JSON.parse(text.substring(47).slice(0, -2));
-      console.log("全rows:", json.table.rows); // 👈 rowsの中身全出力
     }
 
     function rollDice() {
