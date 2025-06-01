@@ -23,6 +23,9 @@
   <script>
     const sheetID = "1qnpuZAgx0AL1rLbvQ8BJ92ssCksiEDO5sfT9Z99xgb4";
     const sheetName = "SuccessLog";
+    const successWebhookURL = "https://hook.eu2.make.com/dkxo9a01uaovk75sywloqnkijqtjqfaf";
+    const nearMissWebhookURL = "https://hook.eu2.make.com/g6igdb1tv5tmulbjqm8ctg4u17wuxn7u";
+
     let diceCount = 2;
     let latestResult = [];
     let resultType = "";
@@ -33,10 +36,10 @@
         const res = await fetch(url);
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
-    
+
         let rows = json.table.rows || [];
-    
-        // ✅ A1がデータ行として返ってくる場合、先頭に 'stage_number' があれば除外
+
+        // ✅ A1がデータ行として返るなら除外
         if (
           rows.length > 0 &&
           rows[0].c &&
@@ -44,18 +47,18 @@
           typeof rows[0].c[0].v === 'string' &&
           rows[0].c[0].v.toLowerCase().includes('stage_number')
         ) {
-          rows = rows.slice(1); // 先頭行を除外
+          rows = rows.slice(1);
         }
-    
+
         const validRows = rows.filter(row =>
           row.c.some(cell => cell && cell.v !== null && cell.v.toString().trim() !== "")
         );
-    
+
         console.log("rows内容:", rows);
-        console.log("有効な行数（ヘッダー除外後）:", validRows.length);
-    
+        console.log("有効な行数:", validRows.length);
+
         diceCount = (validRows.length === 0) ? 2 : validRows.length + 2;
-    
+
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
       } catch (e) {
