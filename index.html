@@ -37,7 +37,9 @@
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
     
-        const validRows = json.table.rows.filter(row => row.c[0] !== null);
+        const validRows = json.table.rows.filter(
+          row => row.c[0] && row.c[0].v !== null && row.c[0].v !== ''
+        );
         diceCount = validRows.length + 2;
     
         document.getElementById("stage").innerText =
@@ -47,8 +49,6 @@
         document.getElementById("stage").innerText = "ステージ読み込み失敗";
       }
     }
-
-
 
     function rollDice() {
       document.getElementById("result").innerText = "ダイスを振っています…🎲";
