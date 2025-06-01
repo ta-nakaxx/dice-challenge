@@ -25,7 +25,7 @@
     const sheetName = "SuccessLog";
     let diceCount = 2;
     let latestResult = [];
-    let resultType = "";  // "success" or "near_miss"
+    let resultType = "";
 
     const successWebhookURL = "https://hook.eu2.make.com/dkxo9a01uaovk75sywloqnkijqtjqfaf";
     const nearMissWebhookURL = "https://hook.eu2.make.com/g6igdb1tv5tmulbjqm8ctg4u17wuxn7u";
@@ -36,12 +36,17 @@
         const res = await fetch(url);
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
-    
+
+        // ★ ここが診断ログ
+        console.log("rows内容:", json.table.rows);
+
         const validRows = json.table.rows.filter(
-          row => row.c[0] && row.c[0].v !== null && row.c[0].v !== ''
+          row => row.c && row.c[0] && row.c[0].v !== null && row.c[0].v !== ''
         );
-        diceCount = 2;
-    
+
+        console.log("有効な行数:", validRows.length);
+        diceCount = validRows.length + 2;
+
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
       } catch (e) {
@@ -77,43 +82,5 @@
           resultType = "";
         }
 
-        document.getElementById("result").innerText = msg;
-      }, 500);
-    }
+        document.getElementById("result").innerText = ms
 
-    function submitResult() {
-      const name = document.getElementById("playerName").value;
-      if (!name || resultType === "") {
-        alert("名前を入力してください！");
-        return;
-      }
-
-      const payload = {
-        stage_number: diceCount - 1,
-        dice_count: diceCount,
-        dice_values: latestResult.join(','),
-        name: name,
-        timestamp: new Date().toISOString()
-      };
-
-      const url = (resultType === "success") ? successWebhookURL : nearMissWebhookURL;
-
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      })
-        .then(response => {
-          if (response.ok) {
-            alert("記録を送信しました！");
-            location.reload();
-          } else {
-            alert("送信に失敗しました。");
-          }
-        });
-    }
-
-    fetchStageNumber();
-  </script>
-</body>
-</html>
