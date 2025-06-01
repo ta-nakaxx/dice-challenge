@@ -36,9 +36,11 @@
         const res = await fetch(url);
         const text = await res.text();
         const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rowCount = json.table.rows.length;
-        const stage = rowCount + 1;
-        diceCount = stage + 1;
+    
+        // データ行だけを数える
+        const validRows = json.table.rows.filter(row => row.c[0] !== null);
+        diceCount = validRows.length + 2;
+    
         document.getElementById("stage").innerText =
           `現在の挑戦段階：${diceCount}個のサイコロで「1のゾロ目」を出せ！`;
       } catch (e) {
@@ -46,6 +48,7 @@
         document.getElementById("stage").innerText = "ステージ読み込み失敗";
       }
     }
+
 
     function rollDice() {
       document.getElementById("result").innerText = "ダイスを振っています…🎲";
