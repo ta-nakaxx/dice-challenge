@@ -48,6 +48,8 @@
         console.error("ステージ読み込み失敗：", e);
         document.getElementById("stage").innerText = "ステージ読み込み失敗";
       }
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      console.log("全rows:", json.table.rows); // 👈 rowsの中身全出力
     }
 
     function rollDice() {
